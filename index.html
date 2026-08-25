@@ -1,12 +1,731 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>multeMariano</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro Multe di Squadra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Supabase Client JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --paper:#efe8d6;
+    --paper-card:#faf6e9;
+    --paper-dark:#e4dbc2;
+    --ink:#1c2b22;
+    --ink-soft:#4b5a4c;
+    --ink-faint:#8a8f7f;
+    --line:#c9bfa0;
+    --gold:#b8912b;
+    --gold-soft:#e4c874;
+    --red:#8c2f26;
+    --red-soft:#c6564a;
+    --red-bg:#f4e2de;
+    --shadow: 0 10px 30px -12px rgba(28,43,34,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(184,145,43,0.10), transparent 60%),
+      radial-gradient(1000px 500px at 110% 10%, rgba(140,47,38,0.08), transparent 55%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .display{font-family:'Fraunces',serif;}
+
+  #app{max-width:920px;margin:0 auto;padding:20px 18px 60px;}
+
+  .login-screen{min-height:80vh;display:flex;align-items:center;justify-content:center;}
+  .login-card{
+    background:var(--paper-card);border:1px solid var(--line);box-shadow:var(--shadow);
+    border-radius:6px;padding:40px 36px;max-width:420px;width:100%;text-align:center;position:relative;
+  }
+  .login-card .seal{width:76px;height:76px;margin:0 auto 14px;}
+  .login-card h1{font-size:1.6rem;margin:0 0 4px;letter-spacing:0.01em;}
+  .login-card .eyebrow{text-transform:uppercase;letter-spacing:0.16em;font-size:0.7rem;color:var(--red);font-weight:600;margin-bottom:8px;}
+  .login-card p.desc{color:var(--ink-soft);font-size:0.9rem;line-height:1.5;margin:10px 0 24px;}
+  .login-actions{display:flex;flex-direction:column;gap:10px;}
+  .hint{font-size:0.72rem;color:var(--ink-faint);margin-top:18px;font-family:'JetBrains Mono',monospace;}
+
+  input[type=text], input[type=number], input[type=password], select, textarea{
+    font-family:'Inter',sans-serif;background:#fff;border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:0.92rem;color:var(--ink);width:100%;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--gold-soft);outline-offset:1px;border-color:var(--gold);}
+  label{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);font-weight:600;display:block;margin-bottom:5px;}
+  .field{margin-bottom:14px;text-align:left;}
+
+  button{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:0.88rem;border-radius:4px;border:1px solid var(--ink);
+    padding:11px 18px;cursor:pointer;background:var(--ink);color:var(--paper-card);transition:transform .12s ease, box-shadow .12s ease;
+  }
+  button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(28,43,34,0.25);}
+  button:active{transform:translateY(0);}
+  button.secondary{background:transparent;color:var(--ink);border:1px solid var(--ink);}
+  button.danger{background:var(--red);border-color:var(--red);color:#fff;}
+  button.gold{background:var(--gold);border-color:var(--gold);color:var(--ink);}
+  button:disabled{opacity:0.45;cursor:not-allowed;transform:none;box-shadow:none;}
+  button.small{padding:6px 10px;font-size:0.76rem;border-radius:3px;}
+
+  .letterhead{display:flex;align-items:center;gap:16px;border-bottom:3px double var(--ink);padding-bottom:16px;margin-bottom:6px;}
+  .letterhead .crest{width:56px;height:56px;flex:none;}
+  .letterhead .titles{flex:1;min-width:0;}
+  .letterhead .eyebrow{text-transform:uppercase;letter-spacing:0.18em;font-size:0.66rem;color:var(--red);font-weight:700;margin:0 0 2px;}
+  .letterhead h1{font-size:1.5rem;margin:0;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .letterhead .subtitle{margin:2px 0 0;font-size:0.78rem;color:var(--ink-soft);font-style:italic;}
+  .role-chip{flex:none;text-align:right;}
+  .role-chip .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+  .badge.senato{background:var(--red-bg);color:var(--red);border:1px solid var(--red-soft);}
+  .badge.giocatore{background:#e5e9dd;color:var(--ink-soft);border:1px solid var(--line);}
+  .logout-link{display:block;background:none;border:none;color:var(--ink-faint);font-size:0.72rem;text-decoration:underline;padding:0;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;}
+  .logout-link:hover{transform:none;box-shadow:none;color:var(--ink);}
+
+  .tabs{display:flex;gap:4px;margin:18px 0 0;flex-wrap:wrap;}
+  .tab{font-family:'Fraunces',serif;font-weight:600;font-size:0.88rem;padding:9px 16px 8px;background:var(--paper-dark);border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;color:var(--ink-soft);position:relative;top:1px;}
+  .tab.active{background:var(--paper-card);color:var(--ink);border-color:var(--ink);}
+  .tab:hover:not(.active){color:var(--ink);}
+
+  .panel{background:var(--paper-card);border:1px solid var(--ink);border-radius:0 6px 6px 6px;padding:26px 24px;box-shadow:var(--shadow);min-height:340px;}
+  .panel h2{font-size:1.15rem;margin:0 0 4px;}
+  .panel .panel-desc{color:var(--ink-soft);font-size:0.84rem;margin:0 0 20px;}
+
+  .player-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);}
+  .player-row:first-of-type{border-top:none;}
+  .avatar{width:38px;height:38px;border-radius:50%;background:var(--ink);color:var(--paper-card);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;flex:none;font-family:'Fraunces',serif;}
+  .player-info{flex:1;min-width:0;}
+  .player-info .pname{font-weight:600;font-size:0.94rem;}
+  .player-info .pnum{color:var(--ink-faint);font-size:0.76rem;font-family:'JetBrains Mono',monospace;}
+  .player-total{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.95rem;}
+  .add-player-form{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:flex-end;padding-bottom:18px;border-bottom:1px dashed var(--line);}
+  .add-player-form .field{margin-bottom:0;flex:1;min-width:120px;}
+  .empty-state{text-align:center;padding:36px 10px;color:var(--ink-faint);font-style:italic;font-size:0.9rem;}
+
+  .fine-preview{background:var(--paper);border:1px dashed var(--gold);border-radius:5px;padding:14px 16px;margin:6px 0 20px;display:flex;justify-content:space-between;align-items:center;}
+  .fine-preview .flabel{font-size:0.82rem;color:var(--ink-soft);}
+  .fine-preview .ftotal{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.3rem;color:var(--red);}
+  optgroup{font-family:'Inter',sans-serif;font-weight:700;font-size:0.8rem;}
+
+  table{width:100%;border-collapse:collapse;font-size:0.86rem;}
+  thead th{text-align:left;text-transform:uppercase;font-size:0.66rem;letter-spacing:0.06em;color:var(--ink-faint);border-bottom:2px solid var(--ink);padding:0 8px 8px;font-weight:700;}
+  tbody td{padding:10px 8px;border-top:1px solid var(--line);vertical-align:top;}
+  tbody tr:hover{background:rgba(184,145,43,0.06);}
+  td.num, th.num{text-align:right;}
+  .protocollo{color:var(--ink-faint);font-size:0.78rem;}
+  .amt{font-family:'JetBrains Mono',monospace;font-weight:700;}
+  .amt.red{color:var(--red);}
+  .note-cell{color:var(--ink-soft);font-style:italic;font-size:0.82rem;max-width:220px;}
+  .match-tag{display:inline-block;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.04em;background:var(--red-bg);color:var(--red);padding:2px 6px;border-radius:3px;margin-left:6px;font-weight:700;}
+  .filter-row{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
+  .filter-row select{width:auto;min-width:170px;}
+  .table-scroll{overflow-x:auto;}
+
+  .rank-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line);}
+  .rank-row:first-of-type{border-top:none;}
+  .rank-num{font-family:'Fraunces',serif;font-weight:900;font-size:1.3rem;color:var(--ink-faint);width:28px;text-align:center;flex:none;}
+  .rank-row.top .rank-num{color:var(--red);}
+  .rank-body{flex:1;min-width:0;}
+  .rank-name-line{display:flex;justify-content:space-between;font-size:0.92rem;margin-bottom:5px;}
+  .rank-name-line .rname{font-weight:700;}
+  .rank-name-line .rtotal{font-family:'JetBrains Mono',monospace;font-weight:700;}
+  .bar-track{background:var(--paper-dark);border-radius:3px;height:7px;overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg, var(--gold), var(--red));border-radius:3px;}
+  .team-total-banner{background:var(--ink);color:var(--paper-card);border-radius:5px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+  .team-total-banner .ttl{font-size:0.78rem;text-transform:uppercase;letter-spacing:0.1em;opacity:0.75;}
+  .team-total-banner .tval{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--gold-soft);}
+
+  .settings-block{padding:18px 0;border-top:1px dashed var(--line);}
+  .settings-block:first-of-type{border-top:none;padding-top:0;}
+  .settings-block h3{font-size:0.95rem;margin:0 0 4px;}
+  .settings-block .subtext{font-size:0.78rem;color:var(--ink-soft);margin:0 0 12px;}
+  .inline-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+  .inline-form .field{flex:1;min-width:140px;margin-bottom:0;}
+  .fine-catalog-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:0.84rem;}
+  .fine-catalog-row:first-of-type{border-top:none;}
+  .fine-catalog-row input{width:90px;}
+
+  .toast-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(28,43,34,0.35);z-index:50;}
+  .toast-card{background:var(--paper-card);border:1px solid var(--ink);border-radius:6px;padding:32px 40px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.35);animation:pop .35s cubic-bezier(.2,1.6,.4,1);}
+  @keyframes pop{from{transform:scale(0.6) rotate(-8deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
+  .toast-card .seal{width:90px;height:90px;margin:0 auto 12px;}
+  .toast-card h3{margin:0 0 4px;font-size:1.1rem;}
+  .toast-card p{margin:0 0 18px;color:var(--ink-soft);font-size:0.85rem;}
+
+  @media (max-width:600px){
+    .letterhead{flex-wrap:wrap;}
+    .role-chip{order:3;width:100%;text-align:left;margin-top:8px;}
+    .panel{padding:18px 14px;}
+    table thead{display:none;}
+    tbody tr{display:block;border-top:2px solid var(--ink);padding:10px 0;}
+    tbody td{display:flex;justify-content:space-between;border:none;padding:4px 2px;}
+    tbody td.note-cell{display:block;max-width:none;}
+    tbody td::before{content:attr(data-label);font-weight:700;color:var(--ink-faint);font-size:0.7rem;text-transform:uppercase;margin-right:10px;}
+  }
+</style>
 </head>
 <body>
-    <h1>Welcome to multeMariano</h1>
-    <p>This is your HTML file.</p>
+<div id="app"></div>
+
+<script>
+(function(){
+
+  // INSERISCI QUI LE SUE CREDENZIALI DI SUPABASE
+  const SUPABASE_URL = 'https://gviwulavyornnhnmpmxa.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_8M6ettDVzRBrmeUY7dcj2Q_wfjvNcTJ';
+
+  const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  function sealSvg(size){
+    return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#8c2f26" stroke-width="3" stroke-dasharray="5 4"/>
+      <circle cx="50" cy="50" r="37" fill="none" stroke="#8c2f26" stroke-width="1.5"/>
+      <text x="50" y="43" text-anchor="middle" font-family="Fraunces, serif" font-size="9" font-weight="700" fill="#8c2f26" letter-spacing="1">SENATO</text>
+      <text x="50" y="68" text-anchor="middle" font-family="Fraunces, serif" font-size="30" font-weight="700" fill="#8c2f26">€</text>
+    </svg>`;
+  }
+
+  const DEFAULT_FINE_TYPES = [
+    {id:'ritardo', label:'Ritardo in allenamento o partita (5 min di tolleranza)', unit:'minuti', amount:1, matchOnly:false},
+    {id:'oggetti_palestra', label:'Dimenticanza in palestra di oggetti', unit:'oggetti', amount:2, matchOnly:false},
+    {id:'abbigliamento_all', label:"Dimenticanza di abbigliamento/attrezzatura per l'allenamento", unit:'oggetti', amount:1, matchOnly:false},
+    {id:'cavolata', label:'Grande cavolata a discrezione del Senato', unit:'fisso', amount:2, matchOnly:false},
+    {id:'altre_sanzioni', label:'Altre sanzioni indicate dal Senato (stizza, cellulare, ecc.)', unit:'fisso', amount:2, matchOnly:false},
+    {id:'spogliatoio', label:'Condotta negli spogliatoi e igiene (niente doccia)', unit:'fisso', amount:2, matchOnly:false},
+    {id:'documento', label:'Dimenticanza documento', unit:'fisso', amount:5, matchOnly:true},
+    {id:'abbigliamento_partita', label:'Abbigliamento sbagliato', unit:'oggetti', amount:2, matchOnly:true},
+    {id:'battuta_rete', label:'Battuta sotto rete', unit:'fisso', amount:2, matchOnly:true},
+    {id:'giallo', label:'Cartellino giallo', unit:'fisso', amount:10, matchOnly:true},
+    {id:'rosso', label:'Cartellino rosso', unit:'fisso', amount:20, matchOnly:true},
+  ];
+
+  function defaultState(){
+    return {
+      teamName:'La Squadra',
+      pin:'2026',
+      players:[],
+      fineTypes: DEFAULT_FINE_TYPES,
+      records:[],
+      nextProtocollo:1
+    };
+  }
+
+  let STATE = null;
+  let ROLE = null; 
+  let TAB = 'squadra';
+
+  function uid(){ return Math.random().toString(36).slice(2,10); }
+  function euro(n){ return '€ ' + n.toFixed(2).replace('.',','); }
+
+  async function loadState(){
+    try{
+      const { data, error } = await _supabase.from('registro').select('data').eq('id', 'app_state').single();
+      if(error || !data || !data.data || Object.keys(data.data).length === 0){
+        const def = defaultState();
+        await _supabase.from('registro').upsert({ id: 'app_state', data: def });
+        return def;
+      }
+      return data.data;
+    }catch(e){
+      console.error('Errore lettura Cloud', e);
+      return defaultState();
+    }
+  }
+
+  async function saveState(){
+    try{
+      await _supabase.from('registro').upsert({ id: 'app_state', data: STATE });
+    }catch(e){
+      console.error('Errore salvataggio Cloud', e);
+      alert('Errore di connessione cloud. Riprova.');
+    }
+  }
+
+  // Sincronizzazione Realtime
+  function subscribeRealtime(){
+    _supabase.channel('public:registro')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'registro' }, payload => {
+        if(payload.new && payload.new.data){
+          STATE = payload.new.data;
+          render();
+        }
+      })
+      .subscribe();
+  }
+
+  function initials(name){ return name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+  function playerTotal(playerId){ return STATE.records.filter(r=>r.playerId===playerId).reduce((s,r)=>s+r.total,0); }
+  function fineTypeById(id){ return STATE.fineTypes.find(f=>f.id===id); }
+  function playerById(id){ return STATE.players.find(p=>p.id===id); }
+
+  function render(){
+    const app = document.getElementById('app');
+    if(!STATE){
+      app.innerHTML = `<div class="login-screen"><p class="mono" style="color:var(--ink-faint)">Connessione al registro in cloud…</p></div>`;
+      return;
+    }
+    if(!ROLE){
+      app.innerHTML = renderLogin();
+      bindLogin();
+      return;
+    }
+    app.innerHTML = renderShell();
+    bindShell();
+  }
+
+  function renderLogin(){
+    return `
+    <div class="login-screen">
+      <div class="login-card">
+        <div class="seal">${sealSvg(76)}</div>
+        <p class="eyebrow">Registro Ufficiale</p>
+        <h1 class="display">${escapeHtml(STATE.teamName)}</h1>
+        <p class="desc">Verbale delle multe di squadra, tenuto a cura del Senato. Scegli come vuoi accedere.</p>
+        <div class="login-actions">
+          <button id="btn-senato" class="gold">Accedi come Senato</button>
+          <button id="btn-viewer" class="secondary">Entra come Giocatore (sola visione)</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function bindLogin(){
+    document.getElementById('btn-viewer').onclick = ()=>{ ROLE='giocatore'; TAB='squadra'; render(); };
+    document.getElementById('btn-senato').onclick = ()=>{
+      const pin = prompt('Inserisci il PIN del Senato:');
+      if(pin===null) return;
+      if(pin===STATE.pin){ ROLE='senato'; TAB='squadra'; render(); }
+      else alert('PIN errato.');
+    };
+  }
+
+  function renderShell(){
+    const isAdmin = ROLE==='senato';
+    const tabs = [
+      {id:'squadra', label:'Squadra'},
+      ...(isAdmin ? [{id:'registra', label:'Registra Multa'}] : []),
+      {id:'storico', label:'Storico'},
+      {id:'classifica', label:'Classifica'},
+      ...(isAdmin ? [{id:'impostazioni', label:'Impostazioni'}] : []),
+    ];
+    return `
+      <header class="letterhead">
+        <div class="crest">${sealSvg(56)}</div>
+        <div class="titles">
+          <p class="eyebrow">Registro Ufficiale</p>
+          <h1 class="display">${escapeHtml(STATE.teamName)}</h1>
+          <p class="subtitle">Tenuto a cura del Senato</p>
+        </div>
+        <div class="role-chip">
+          <span class="badge ${isAdmin?'senato':'giocatore'}">${isAdmin?'Senato':'Giocatore'}</span>
+          <button class="logout-link" id="btn-logout">Cambia accesso</button>
+        </div>
+      </header>
+      <nav class="tabs">
+        ${tabs.map(t=>`<div class="tab ${TAB===t.id?'active':''}" data-tab="${t.id}">${t.label}</div>`).join('')}
+      </nav>
+      <div class="panel">${renderPanel()}</div>
+    `;
+  }
+
+  function bindShell(){
+    document.getElementById('btn-logout').onclick = ()=>{ ROLE=null; render(); };
+    document.querySelectorAll('.tab').forEach(el=>{
+      el.onclick = ()=>{ TAB = el.dataset.tab; render(); };
+    });
+    bindPanel();
+  }
+
+  function renderPanel(){
+    switch(TAB){
+      case 'squadra': return renderSquadra();
+      case 'registra': return renderRegistra();
+      case 'storico': return renderStorico();
+      case 'classifica': return renderClassifica();
+      case 'impostazioni': return renderImpostazioni();
+      default: return '';
+    }
+  }
+
+  function bindPanel(){
+    switch(TAB){
+      case 'squadra': return bindSquadra();
+      case 'registra': return bindRegistra();
+      case 'storico': return bindStorico();
+      case 'classifica': return bindClassifica();
+      case 'impostazioni': return bindImpostazioni();
+    }
+  }
+
+  function renderSquadra(){
+    const isAdmin = ROLE==='senato';
+    const rows = STATE.players.map(p=>{
+      const tot = playerTotal(p.id);
+      return `<div class="player-row">
+        <div class="avatar">${escapeHtml(initials(p.name))}</div>
+        <div class="player-info">
+          <div class="pname">${escapeHtml(p.name)}</div>
+          <div class="pnum">${p.number? '#'+escapeHtml(p.number) : 'nessun numero'}</div>
+        </div>
+        <div class="player-total">${euro(tot)}</div>
+        ${isAdmin ? `<button class="small danger" data-remove="${p.id}" style="margin-left:8px;">Rimuovi</button>` : ''}
+      </div>`;
+    }).join('');
+
+    return `
+      <h2>Componenti della squadra</h2>
+      <p class="panel-desc">Elenco dei giocatori registrati e totale multe accumulate da ciascuno.</p>
+      ${isAdmin ? `
+      <div class="add-player-form">
+        <div class="field"><label>Nome e cognome</label><input type="text" id="new-player-name" placeholder="Es. Mario Rossi"></div>
+        <div class="field" style="flex:0 0 100px;"><label>N. maglia</label><input type="text" id="new-player-number" placeholder="7"></div>
+        <button id="btn-add-player" class="gold">Aggiungi giocatore</button>
+      </div>` : ''}
+      ${STATE.players.length===0 ? `<div class="empty-state">Nessun giocatore registrato ancora.${isAdmin?' Aggiungine uno qui sopra.':''}</div>` : rows}
+    `;
+  }
+
+  function bindSquadra(){
+    const isAdmin = ROLE==='senato';
+    if(isAdmin){
+      document.getElementById('btn-add-player').onclick = async ()=>{
+        const nameEl = document.getElementById('new-player-name');
+        const numEl = document.getElementById('new-player-number');
+        const name = nameEl.value.trim();
+        if(!name){ alert('Inserisci un nome.'); return; }
+        STATE.players.push({id:uid(), name, number:numEl.value.trim()});
+        await saveState();
+        render();
+      };
+      document.querySelectorAll('[data-remove]').forEach(btn=>{
+        btn.onclick = async ()=>{
+          const id = btn.dataset.remove;
+          const p = playerById(id);
+          if(!confirm(`Rimuovere ${p.name}?`)) return;
+          STATE.players = STATE.players.filter(pl=>pl.id!==id);
+          await saveState();
+          render();
+        };
+      });
+    }
+  }
+
+  function renderRegistra(){
+    if(STATE.players.length===0){
+      return `<h2>Registra multa</h2><div class="empty-state">Aggiungi prima almeno un giocatore nella scheda "Squadra".</div>`;
+    }
+    const generali = STATE.fineTypes.filter(f=>!f.matchOnly);
+    const partita = STATE.fineTypes.filter(f=>f.matchOnly);
+    const optGroup = (label, list) => `<optgroup label="${label}">${list.map(f=>`<option value="${f.id}">${escapeHtml(f.label)} — ${unitLabel(f)}</option>`).join('')}</optgroup>`;
+
+    return `
+      <h2>Registra una multa</h2>
+      <p class="panel-desc">Seleziona il giocatore, il tipo di sanzione ed eventualmente una nota.</p>
+      <div class="field">
+        <label>Giocatore</label>
+        <select id="f-player">${STATE.players.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}${p.number?' (#'+escapeHtml(p.number)+')':''}</option>`).join('')}</select>
+      </div>
+      <div class="field">
+        <label>Tipo di multa</label>
+        <select id="f-type">
+          ${optGroup('Generali', generali)}
+          ${optGroup('Solo alla partita', partita)}
+        </select>
+      </div>
+      <div class="field" id="f-qty-wrap">
+        <label id="f-qty-label">Quantità</label>
+        <input type="number" id="f-qty" min="1" step="1" value="1">
+      </div>
+      <div class="fine-preview">
+        <span class="flabel">Totale multa</span>
+        <span class="ftotal mono" id="f-total">€ 0,00</span>
+      </div>
+      <div class="field">
+        <label>Nota (facoltativa)</label>
+        <textarea id="f-note" rows="2" placeholder="Es. arrivato 8 minuti dopo l'inizio"></textarea>
+      </div>
+      <button id="btn-submit-fine" class="danger">Registra e timbra</button>
+    `;
+  }
+
+  function unitLabel(f){
+    if(f.unit==='fisso') return euro(f.amount)+' fisso';
+    if(f.unit==='minuti') return euro(f.amount)+'/minuto';
+    if(f.unit==='oggetti') return euro(f.amount)+'/oggetto';
+    return euro(f.amount);
+  }
+
+  function bindRegistra(){
+    if(STATE.players.length===0) return;
+    const typeSel = document.getElementById('f-type');
+    const qtyWrap = document.getElementById('f-qty-wrap');
+    const qtyLabel = document.getElementById('f-qty-label');
+    const qtyInput = document.getElementById('f-qty');
+    const totalEl = document.getElementById('f-total');
+
+    function updatePreview(){
+      const ft = fineTypeById(typeSel.value);
+      if(!ft) return;
+      if(ft.unit==='fisso'){
+        qtyWrap.style.display='none';
+        qtyInput.value=1;
+      } else {
+        qtyWrap.style.display='';
+        qtyLabel.textContent = ft.unit==='minuti' ? 'Minuti di ritardo' : 'Numero di oggetti';
+        if(!qtyInput.value || qtyInput.value<1) qtyInput.value=1;
+      }
+      const qty = Math.max(1, parseInt(qtyInput.value||'1',10));
+      totalEl.textContent = euro(ft.amount*qty);
+    }
+    typeSel.onchange = updatePreview;
+    qtyInput.oninput = updatePreview;
+    updatePreview();
+
+    document.getElementById('btn-submit-fine').onclick = async ()=>{
+      const ft = fineTypeById(typeSel.value);
+      const qty = ft.unit==='fisso' ? 1 : Math.max(1, parseInt(qtyInput.value||'1',10));
+      const total = ft.amount*qty;
+      const note = document.getElementById('f-note').value.trim();
+      const playerId = document.getElementById('f-player').value;
+      const record = {
+        id: uid(),
+        protocollo: STATE.nextProtocollo,
+        playerId, fineTypeId: ft.id, qty, total, note,
+        date: new Date().toISOString()
+      };
+      STATE.records.unshift(record);
+      STATE.nextProtocollo += 1;
+      await saveState();
+      showStampToast(record, ft);
+    };
+  }
+
+  function showStampToast(record, ft){
+    const wrap = document.createElement('div');
+    wrap.className = 'toast-wrap';
+    wrap.innerHTML = `
+      <div class="toast-card">
+        <div class="seal">${sealSvg(90)}</div>
+        <h3 class="display">Verbale N° ${String(record.protocollo).padStart(4,'0')} registrato</h3>
+        <p>${escapeHtml(playerById(record.playerId).name)} — ${escapeHtml(ft.label)} — <strong>${euro(record.total)}</strong></p>
+        <button id="toast-ok" class="gold">Ho capito</button>
+      </div>`;
+    document.body.appendChild(wrap);
+    document.getElementById('toast-ok').onclick = ()=>{
+      wrap.remove();
+      render();
+    };
+  }
+
+  function renderStorico(){
+    const isAdmin = ROLE==='senato';
+    const filterVal = window.__storicoFilter || 'all';
+    const records = STATE.records.filter(r=> filterVal==='all' || r.playerId===filterVal);
+
+    const rows = records.map(r=>{
+      const p = playerById(r.playerId);
+      const ft = fineTypeById(r.fineTypeId);
+      return `<tr>
+        <td class="protocollo mono" data-label="N°">N° ${String(r.protocollo).padStart(4,'0')}</td>
+        <td data-label="Giocatore">${p? escapeHtml(p.name): '<em>rimosso</em>'}</td>
+        <td data-label="Multa">${ft? escapeHtml(ft.label): '<em>eliminata</em>'}${ft&&ft.matchOnly?'<span class="match-tag">partita</span>':''}${r.qty>1?` ×${r.qty}`:''}</td>
+        <td class="note-cell" data-label="Nota">${r.note? escapeHtml(r.note) : '—'}</td>
+        <td data-label="Data">${new Date(r.date).toLocaleDateString('it-IT')}</td>
+        <td class="num amt red" data-label="Importo">${euro(r.total)}</td>
+        ${isAdmin? `<td data-label="" style="text-align:right;"><button class="small secondary" data-edit-amount="${r.id}">Importo</button> <button class="small secondary" data-del="${r.id}">Elimina</button></td>` : ''}
+      </tr>`;
+    }).join('');
+
+    return `
+      <h2>Storico multe</h2>
+      <p class="panel-desc">Tutte le sanzioni registrate.</p>
+      <div class="filter-row">
+        <label style="margin:0;">Filtra per giocatore</label>
+        <select id="filter-player">
+          <option value="all" ${filterVal==='all'?'selected':''}>Tutti</option>
+          ${STATE.players.map(p=>`<option value="${p.id}" ${filterVal===p.id?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
+        </select>
+      </div>
+      ${records.length===0 ? `<div class="empty-state">Nessuna multa registrata.</div>` : `
+      <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>N°</th><th>Giocatore</th><th>Multa</th><th>Nota</th><th>Data</th><th class="num">Importo</th>${isAdmin?'<th></th>':''}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>`}
+    `;
+  }
+
+  function bindStorico(){
+    document.getElementById('filter-player').onchange = (e)=>{
+      window.__storicoFilter = e.target.value;
+      render();
+    };
+    if(ROLE==='senato'){
+      document.querySelectorAll('[data-edit-amount]').forEach(btn=>{
+        btn.onclick = async ()=>{
+          const record = STATE.records.find(r=>r.id===btn.dataset.editAmount);
+          if(!record) return;
+          const value = prompt('Nuovo importo:', record.total.toFixed(2).replace('.',','));
+          if(value===null) return;
+          const amount = parseFloat(value.replace(',', '.'));
+          if(!Number.isFinite(amount) || amount<0) return;
+          record.total = amount;
+          await saveState();
+          render();
+        };
+      });
+      document.querySelectorAll('[data-del]').forEach(btn=>{
+        btn.onclick = async ()=>{
+          if(!confirm('Eliminare questo verbale?')) return;
+          STATE.records = STATE.records.filter(r=>r.id!==btn.dataset.del);
+          await saveState();
+          render();
+        };
+      });
+    }
+  }
+
+  function renderClassifica(){
+    const totals = STATE.players.map(p=>({p, total: playerTotal(p.id)})).sort((a,b)=>b.total-a.total);
+    const grandTotal = totals.reduce((s,t)=>s+t.total,0);
+    const max = totals.length? totals[0].total : 0;
+
+    const rows = totals.map((t,i)=>`
+      <div class="rank-row ${i<3 && t.total>0 ?'top':''}">
+        <div class="rank-num display">${i+1}</div>
+        <div class="rank-body">
+          <div class="rank-name-line"><span class="rname">${escapeHtml(t.p.name)}</span><span class="rtotal">${euro(t.total)}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${max>0? (t.total/max*100):0}%"></div></div>
+        </div>
+      </div>`).join('');
+
+    return `
+      <h2>Classifica multe</h2>
+      <p class="panel-desc">Totale accumulato da ogni giocatore.</p>
+      <div class="team-total-banner">
+        <span class="ttl">Totale cassa squadra</span>
+        <span class="tval">${euro(grandTotal)}</span>
+      </div>
+      ${totals.length===0 ? `<div class="empty-state">Nessun giocatore registrato.</div>` : rows}
+    `;
+  }
+  function bindClassifica(){}
+
+  function renderImpostazioni(){
+    const catalogRows = STATE.fineTypes.map(f=>`
+      <div class="fine-catalog-row">
+        <span>${escapeHtml(f.label)} ${f.matchOnly?'<span class="match-tag">partita</span>':''}</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <input type="number" min="0" step="0.5" value="${f.amount}" data-catalog-amount="${f.id}" class="mono">
+          <span class="mono" style="font-size:0.75rem;color:var(--ink-faint);">${f.unit==='fisso'?'€':f.unit==='minuti'?'€/min':'€/ogg.'}</span>
+        </span>
+      </div>`).join('');
+
+    return `
+      <h2>Impostazioni</h2>
+      <p class="panel-desc">Gestione riservata al Senato.</p>
+      <div class="settings-block">
+        <h3>Nome squadra</h3>
+        <div class="inline-form">
+          <div class="field"><input type="text" id="set-teamname" value="${escapeHtml(STATE.teamName)}"></div>
+          <button id="btn-save-teamname" class="secondary">Salva nome</button>
+        </div>
+      </div>
+      <div class="settings-block">
+        <h3>PIN del Senato</h3>
+        <div class="inline-form">
+          <div class="field"><label>Nuovo PIN</label><input type="text" id="set-pin" placeholder="es. 1974"></div>
+          <button id="btn-save-pin" class="secondary">Aggiorna PIN</button>
+        </div>
+      </div>
+      <div class="settings-block">
+        <h3>Tariffario multe</h3>
+        ${catalogRows}
+        <button id="btn-save-catalog" class="secondary" style="margin-top:14px;">Salva tariffario</button>
+      </div>
+      <div class="settings-block">
+        <h3>Backup / Ripristino</h3>
+        <div class="inline-form">
+          <button id="btn-export" class="secondary">Esporta backup (.json)</button>
+          <button id="btn-import" class="secondary">Importa backup</button>
+          <input type="file" id="import-file" accept="application/json" style="display:none;">
+        </div>
+      </div>
+      <div class="settings-block">
+        <h3>Zona pericolosa</h3>
+        <button id="btn-reset" class="danger">Azzera tutti i dati</button>
+      </div>
+    `;
+  }
+
+  function bindImpostazioni(){
+    document.getElementById('btn-save-teamname').onclick = async ()=>{
+      const v = document.getElementById('set-teamname').value.trim();
+      if(!v) return;
+      STATE.teamName = v;
+      await saveState();
+      render();
+    };
+    document.getElementById('btn-save-pin').onclick = async ()=>{
+      const v = document.getElementById('set-pin').value.trim();
+      if(!v) return;
+      STATE.pin = v;
+      await saveState();
+      alert('PIN aggiornato.');
+      render();
+    };
+    document.getElementById('btn-save-catalog').onclick = async ()=>{
+      document.querySelectorAll('[data-catalog-amount]').forEach(inp=>{
+        const ft = fineTypeById(inp.dataset.catalogAmount);
+        const val = parseFloat(inp.value);
+        if(!isNaN(val) && val>=0) ft.amount = val;
+      });
+      await saveState();
+      alert('Tariffario aggiornato.');
+      render();
+    };
+    document.getElementById('btn-export').onclick = ()=>{
+      const blob = new Blob([JSON.stringify(STATE,null,2)], {type:'application/json'});
+      const url = URL.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'backup-multe.json';
+      a.click();
+    };
+    document.getElementById('btn-import').onclick = ()=>{ document.getElementById('import-file').click(); };
+    document.getElementById('import-file').onchange = async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      try{
+        const text = await file.text();
+        STATE = JSON.parse(text);
+        await saveState();
+        render();
+      }catch(err){ alert('File non valido.'); }
+    };
+    document.getElementById('btn-reset').onclick = async ()=>{
+      if(!confirm('Azzerare il registro?')) return;
+      STATE = defaultState();
+      await saveState();
+      render();
+    };
+  }
+
+  function escapeHtml(str){ return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  (async function boot(){
+    STATE = await loadState();
+    subscribeRealtime();
+    render();
+  })();
+
+})();
+</script>
 </body>
 </html>
