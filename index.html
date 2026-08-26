@@ -33,7 +33,7 @@
       radial-gradient(1000px 500px at 110% 10%, rgba(140,47,38,0.08), transparent 55%),
       var(--paper);
     color:var(--ink);
-font-family: 'Montserrat', sans-serif;
+.display{font-family:'Montserrat',sans-serif;font-weight:700;}
     min-height:100vh;
     -webkit-font-smoothing:antialiased;
   }
@@ -52,8 +52,8 @@ font-family: 'Montserrat', sans-serif;
   .login-actions{display:flex;flex-direction:column;gap:10px;}
   .hint{font-size:0.72rem;color:var(--ink-faint);margin-top:18px;font-family:'JetBrains Mono',monospace;}
 
-  input[type=text], input[type=number], input[type=password], select, textarea{
-    font-family:'Inter',sans-serif;background:#fff;border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:0.92rem;color:var(--ink);width:100%;
+ input[type=text], input[type=number], input[type=password], select, textarea{
+    font-family:'Montserrat',sans-serif;background:var(--paper-card);border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:0.92rem;color:var(--ink);width:100%;
   }
   input:focus, select:focus, textarea:focus{outline:2px solid var(--gold-soft);outline-offset:1px;border-color:var(--gold);}
   label{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);font-weight:600;display:block;margin-bottom:5px;}
