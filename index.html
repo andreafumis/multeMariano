@@ -33,9 +33,14 @@
       radial-gradient(1000px 500px at 110% 10%, rgba(140,47,38,0.08), transparent 55%),
       var(--paper);
     color:var(--ink);
-.display, h1, h2, h3 { font-family: 'Montserrat', sans-serif ; font-weight: 700; }
     min-height:100vh;
     -webkit-font-smoothing:antialiased;
+    font-family: 'Montserrat', sans-serif;
+  }
+  
+  .display, h1, h2, h3 { 
+    font-family: 'Montserrat', sans-serif; 
+    font-weight: 700; 
   }
   .mono{font-family:'JetBrains Mono',monospace;}
   #app{max-width:920px;margin:0 auto;padding:20px 18px 60px;}
@@ -84,7 +89,7 @@
   .logout-link:hover{transform:none;box-shadow:none;color:var(--ink);}
 
   .tabs{display:flex;gap:4px;margin:18px 0 0;flex-wrap:wrap;}
-  .tab{font-family:'Montserrat',serif;font-weight:600;font-size:0.88rem;padding:9px 16px 8px;background:var(--paper-dark);border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;color:var(--ink-soft);position:relative;top:1px;}
+  .tab{font-family:'Montserrat',sans-serif;font-weight:600;font-size:0.88rem;padding:9px 16px 8px;background:var(--paper-dark);border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;color:var(--ink-soft);position:relative;top:1px;}
   .tab.active{background:var(--paper-card);color:var(--ink);border-color:var(--ink);}
   .tab:hover:not(.active){color:var(--ink);}
 
@@ -94,7 +99,7 @@
 
   .player-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);}
   .player-row:first-of-type{border-top:none;}
-  .avatar{width:38px;height:38px;border-radius:50%;background:var(--ink);color:var(--paper-card);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;flex:none;font-family:'Montserrat',serif;}
+  .avatar{width:38px;height:38px;border-radius:50%;background:var(--ink);color:var(--paper-card);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;flex:none;font-family:'Montserrat',sans-serif;}
   .player-info{flex:1;min-width:0;}
   .player-info .pname{font-weight:600;font-size:0.94rem;}
   .player-info .pnum{color:var(--ink-faint);font-size:0.76rem;font-family:'JetBrains Mono',monospace;}
@@ -124,7 +129,7 @@
 
   .rank-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line);}
   .rank-row:first-of-type{border-top:none;}
-  .rank-num{font-family:'Montserrat',serif;font-weight:900;font-size:1.3rem;color:var(--ink-faint);width:28px;text-align:center;flex:none;}
+  .rank-num{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.3rem;color:var(--ink-faint);width:28px;text-align:center;flex:none;}
   .rank-row.top .rank-num{color:var(--red);}
   .rank-body{flex:1;min-width:0;}
   .rank-name-line{display:flex;justify-content:space-between;font-size:0.92rem;margin-bottom:5px;}
