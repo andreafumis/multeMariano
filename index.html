@@ -101,16 +101,23 @@
   .player-row:first-of-type{border-top:none;}
   .avatar{width:38px;height:38px;border-radius:50%;background:var(--ink);color:var(--paper-card);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;flex:none;font-family:'Montserrat',sans-serif;}
   .player-info{flex:1;min-width:0;}
-  .player-info .pname{font-weight:600;font-size:0.94rem;}
+  .player-info .pname{font-weight:600;font-size:0.94rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
   .player-info .pnum{color:var(--ink-faint);font-size:0.76rem;font-family:'JetBrains Mono',monospace;}
+  .senato-tag{display:inline-block;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.04em;background:var(--red-bg);color:var(--red);padding:2px 6px;border-radius:3px;font-weight:700;border:1px solid var(--red-soft);}
   .player-total{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.95rem;}
   .add-player-form{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:flex-end;padding-bottom:18px;border-bottom:1px dashed var(--line);}
   .add-player-form .field{margin-bottom:0;flex:1;min-width:120px;}
+  .checkbox-field{display:flex;align-items:center;gap:8px;margin-bottom:0;}
+  .checkbox-field input[type=checkbox]{width:auto;flex:none;accent-color:var(--red);width:16px;height:16px;}
+  .checkbox-field label{margin:0;text-transform:none;font-size:0.82rem;letter-spacing:normal;color:var(--ink);white-space:nowrap;}
+  .senato-toggle{display:flex;align-items:center;gap:6px;flex:none;font-size:0.72rem;color:var(--ink-soft);}
+  .senato-toggle input[type=checkbox]{accent-color:var(--red);width:15px;height:15px;}
   .empty-state{text-align:center;padding:36px 10px;color:var(--ink-faint);font-style:italic;font-size:0.9rem;}
 
   .fine-preview{background:var(--paper);border:1px dashed var(--gold);border-radius:5px;padding:14px 16px;margin:6px 0 20px;display:flex;justify-content:space-between;align-items:center;}
   .fine-preview .flabel{font-size:0.82rem;color:var(--ink-soft);}
   .fine-preview .ftotal{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.3rem;color:var(--red);}
+  .fine-preview .fdoubled{display:block;font-size:0.7rem;color:var(--red-soft);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;}
   optgroup{font-family:'Montserrat',sans-serif;font-weight:700;font-size:0.8rem;}
 
   table{width:100%;border-collapse:collapse;font-size:0.86rem;}
@@ -147,9 +154,18 @@
   .settings-block .subtext{font-size:0.78rem;color:var(--ink-soft);margin:0 0 12px;}
   .inline-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
   .inline-form .field{flex:1;min-width:140px;margin-bottom:0;}
-  .fine-catalog-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:0.84rem;}
-  .fine-catalog-row:first-of-type{border-top:none;}
-  .fine-catalog-row input{width:90px;}
+  .fine-catalog-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:14px 0;border-top:1px solid var(--line);font-size:0.84rem;}
+  .fine-catalog-row:first-of-type{border-top:none;padding-top:0;}
+  .fine-catalog-row .field{margin-bottom:0;}
+  .fine-catalog-row .f-label{flex:2;min-width:200px;}
+  .fine-catalog-row .f-kind{flex:1;min-width:170px;}
+  .fine-catalog-row .f-amount{flex:0 0 100px;}
+  .fine-catalog-row .f-qtylabel{flex:1;min-width:160px;}
+  .fine-catalog-row .checkbox-field{flex:0 0 auto;}
+  .fine-catalog-row .amount-unit{font-size:0.72rem;color:var(--ink-faint);display:block;margin-top:3px;}
+  .reorder-btns{display:flex;flex-direction:column;gap:3px;flex:none;}
+  .reorder-btns button{padding:2px 9px;font-size:0.68rem;line-height:1.4;}
+  .new-fine-form{padding-bottom:18px;margin-bottom:4px;border-bottom:1px dashed var(--line);}
 
   .toast-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(28,43,34,0.35);z-index:50;}
   .toast-card{background:var(--paper-card);border:1px solid var(--ink);border-radius:6px;padding:32px 40px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.35);animation:pop .35s cubic-bezier(.2,1.6,.4,1);}
@@ -194,12 +210,13 @@
   }
 
   const DEFAULT_FINE_TYPES = [
-    {id:'ritardo', label:'Ritardo in allenamento o partita (5 min di tolleranza)', unit:'minuti', amount:1, matchOnly:false},
+    {id:'ritardo', label:'Ritardo in allenamento o partita (5 min di tolleranza)', unit:'minuti', amount:1, matchOnly:false, qtyLabel:'Minuti di ritardo'},
     {id:'oggetti_palestra', label:'Dimenticanza in palestra di oggetti', unit:'oggetti', amount:2, matchOnly:false},
     {id:'abbigliamento_all', label:"Dimenticanza di abbigliamento/attrezzatura per l'allenamento", unit:'oggetti', amount:1, matchOnly:false},
     {id:'cavolata', label:'Grande cavolata a discrezione del Senato', unit:'fisso', amount:2, matchOnly:false},
     {id:'altre_sanzioni', label:'Altre sanzioni indicate dal Senato (stizza, cellulare, ecc.)', unit:'fisso', amount:2, matchOnly:false},
     {id:'spogliatoio', label:'Condotta negli spogliatoi e igiene (niente doccia)', unit:'fisso', amount:2, matchOnly:false},
+    {id:'telefono', label:'Utilizzo del telefono (ogni sguardo allo schermo)', unit:'minuti', amount:1, matchOnly:false, qtyLabel:'Minuti consecutivi di utilizzo (lascia 1 per un semplice sguardo)'},
     {id:'documento', label:'Dimenticanza documento', unit:'fisso', amount:5, matchOnly:true},
     {id:'abbigliamento_partita', label:'Abbigliamento sbagliato', unit:'oggetti', amount:2, matchOnly:true},
     {id:'battuta_rete', label:'Battuta sotto rete', unit:'fisso', amount:2, matchOnly:true},
@@ -252,8 +269,8 @@
   // Sincronizzazione Realtime
   function subscribeRealtime(){
     _supabase.channel('public:registro')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'registro' }, payload => {
-        if(payload.new && payload.new.data){
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'registro', filter: 'id=eq.app_state' }, payload => {
+        if(payload.new && payload.new.data && Object.keys(payload.new.data).length){
           STATE = payload.new.data;
           render();
         }
@@ -262,9 +279,38 @@
   }
 
   function initials(name){ return name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
-  function playerTotal(playerId){ return STATE.records.filter(r=>r.playerId===playerId).reduce((s,r)=>s+r.total,0); }
   function fineTypeById(id){ return STATE.fineTypes.find(f=>f.id===id); }
   function playerById(id){ return STATE.players.find(p=>p.id===id); }
+
+  // Calcola l'importo di un verbale in base allo stato ATTUALE di Senato del giocatore
+  // (non a quello che aveva quando la multa e' stata registrata). Cosi', se un giocatore
+  // viene reso o tolto dal Senato, tutti i suoi verbali si raddoppiano/dimezzano da soli,
+  // ovunque venga mostrato il totale, in tempo reale su tutte le schede collegate.
+  function recordAmounts(r){
+    if(r.manualTotal !== undefined && r.manualTotal !== null){
+      return { base:r.manualTotal, total:r.manualTotal, doubled:false, manual:true };
+    }
+    // Compatibilita' con verbali salvati prima di questa modifica (avevano solo total+doubled fissi)
+    const base = (r.base !== undefined) ? r.base : (r.doubled ? r.total/2 : r.total);
+    const p = playerById(r.playerId);
+    const doubled = !!(p && p.senato);
+    return { base, total: doubled ? base*2 : base, doubled, manual:false };
+  }
+
+  function playerTotal(playerId){
+    return STATE.records.filter(r=>r.playerId===playerId).reduce((s,r)=>s+recordAmounts(r).total, 0);
+  }
+
+  // Ricarica lo stato più recente dal cloud PRIMA di applicare una modifica, così due schede
+  // aperte insieme non si sovrascrivono a vicenda (causa più probabile di una multa "sparita").
+  async function refreshState(){
+    try{
+      const { data, error } = await _supabase.from('registro').select('data').eq('id', 'app_state').single();
+      if(!error && data && data.data && Object.keys(data.data).length){
+        STATE = data.data;
+      }
+    }catch(e){ console.error('Errore aggiornamento stato pre-salvataggio', e); }
+  }
 
   function render(){
     const app = document.getElementById('app');
@@ -372,9 +418,10 @@
       return `<div class="player-row">
         <div class="avatar">${escapeHtml(initials(p.name))}</div>
         <div class="player-info">
-          <div class="pname">${escapeHtml(p.name)}</div>
+          <div class="pname">${escapeHtml(p.name)} ${p.senato? '<span class="senato-tag">Senato ×2</span>' : ''}</div>
           <div class="pnum">${p.number? '#'+escapeHtml(p.number) : 'nessun numero'}</div>
         </div>
+        ${isAdmin ? `<label class="senato-toggle"><input type="checkbox" data-senato-toggle="${p.id}" ${p.senato?'checked':''}> Senato</label>` : ''}
         <div class="player-total">${euro(tot)}</div>
         ${isAdmin ? `<button class="small danger" data-remove="${p.id}" style="margin-left:8px;">Rimuovi</button>` : ''}
       </div>`;
@@ -382,11 +429,15 @@
 
     return `
       <h2>Componenti della squadra</h2>
-      <p class="panel-desc">Elenco dei giocatori registrati e totale multe accumulate da ciascuno.</p>
+      <p class="panel-desc">Elenco dei giocatori registrati e totale multe accumulate da ciascuno. I membri del Senato pagano il doppio su ogni multa.</p>
       ${isAdmin ? `
       <div class="add-player-form">
         <div class="field"><label>Nome e cognome</label><input type="text" id="new-player-name" placeholder="Es. Mario Rossi"></div>
         <div class="field" style="flex:0 0 100px;"><label>N. maglia</label><input type="text" id="new-player-number" placeholder="7"></div>
+        <div class="checkbox-field" style="flex:0 0 auto;">
+          <input type="checkbox" id="new-player-senato">
+          <label for="new-player-senato">Membro del Senato</label>
+        </div>
         <button id="btn-add-player" class="gold">Aggiungi giocatore</button>
       </div>` : ''}
       ${STATE.players.length===0 ? `<div class="empty-state">Nessun giocatore registrato ancora.${isAdmin?' Aggiungine uno qui sopra.':''}</div>` : rows}
@@ -399,9 +450,13 @@
       document.getElementById('btn-add-player').onclick = async ()=>{
         const nameEl = document.getElementById('new-player-name');
         const numEl = document.getElementById('new-player-number');
+        const senatoEl = document.getElementById('new-player-senato');
         const name = nameEl.value.trim();
         if(!name){ alert('Inserisci un nome.'); return; }
-        STATE.players.push({id:uid(), name, number:numEl.value.trim()});
+        const number = numEl.value.trim();
+        const senato = senatoEl.checked;
+        await refreshState();
+        STATE.players.push({id:uid(), name, number, senato});
         await saveState();
         render();
       };
@@ -409,8 +464,21 @@
         btn.onclick = async ()=>{
           const id = btn.dataset.remove;
           const p = playerById(id);
-          if(!confirm(`Rimuovere ${p.name}?`)) return;
+          if(!p || !confirm(`Rimuovere ${p.name}?`)) return;
+          await refreshState();
           STATE.players = STATE.players.filter(pl=>pl.id!==id);
+          await saveState();
+          render();
+        };
+      });
+      document.querySelectorAll('[data-senato-toggle]').forEach(chk=>{
+        chk.onchange = async ()=>{
+          const id = chk.dataset.senatoToggle;
+          const checked = chk.checked;
+          await refreshState();
+          const p = playerById(id);
+          if(!p){ render(); return; }
+          p.senato = checked;
           await saveState();
           render();
         };
@@ -431,7 +499,7 @@
       <p class="panel-desc">Seleziona il giocatore, il tipo di sanzione ed eventualmente una nota.</p>
       <div class="field">
         <label>Giocatore</label>
-        <select id="f-player">${STATE.players.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}${p.number?' (#'+escapeHtml(p.number)+')':''}</option>`).join('')}</select>
+        <select id="f-player">${STATE.players.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}${p.number?' (#'+escapeHtml(p.number)+')':''}${p.senato?' — Senato ×2':''}</option>`).join('')}</select>
       </div>
       <div class="field">
         <label>Tipo di multa</label>
@@ -445,7 +513,7 @@
         <input type="number" id="f-qty" min="1" step="1" value="1">
       </div>
       <div class="fine-preview">
-        <span class="flabel">Totale multa</span>
+        <span class="flabel">Totale multa<span class="fdoubled" id="f-doubled-note" style="display:none;">Raddoppiata: membro del Senato</span></span>
         <span class="ftotal mono" id="f-total">€ 0,00</span>
       </div>
       <div class="field">
@@ -465,11 +533,13 @@
 
   function bindRegistra(){
     if(STATE.players.length===0) return;
+    const playerSel = document.getElementById('f-player');
     const typeSel = document.getElementById('f-type');
     const qtyWrap = document.getElementById('f-qty-wrap');
     const qtyLabel = document.getElementById('f-qty-label');
     const qtyInput = document.getElementById('f-qty');
     const totalEl = document.getElementById('f-total');
+    const doubledNote = document.getElementById('f-doubled-note');
 
     function updatePreview(){
       const ft = fineTypeById(typeSel.value);
@@ -479,26 +549,44 @@
         qtyInput.value=1;
       } else {
         qtyWrap.style.display='';
-        qtyLabel.textContent = ft.unit==='minuti' ? 'Minuti di ritardo' : 'Numero di oggetti';
+        qtyLabel.textContent = ft.qtyLabel || (ft.unit==='minuti' ? 'Minuti' : 'Numero di oggetti');
         if(!qtyInput.value || qtyInput.value<1) qtyInput.value=1;
       }
       const qty = Math.max(1, parseInt(qtyInput.value||'1',10));
-      totalEl.textContent = euro(ft.amount*qty);
+      const player = playerById(playerSel.value);
+      const base = ft.amount*qty;
+      const total = (player && player.senato) ? base*2 : base;
+      totalEl.textContent = euro(total);
+      doubledNote.style.display = (player && player.senato) ? '' : 'none';
     }
     typeSel.onchange = updatePreview;
     qtyInput.oninput = updatePreview;
+    playerSel.onchange = updatePreview;
     updatePreview();
 
     document.getElementById('btn-submit-fine').onclick = async ()=>{
-      const ft = fineTypeById(typeSel.value);
-      const qty = ft.unit==='fisso' ? 1 : Math.max(1, parseInt(qtyInput.value||'1',10));
-      const total = ft.amount*qty;
+      const chosenTypeId = typeSel.value;
+      const chosenPlayerId = playerSel.value;
+      const chosenQtyRaw = qtyInput.value;
       const note = document.getElementById('f-note').value.trim();
-      const playerId = document.getElementById('f-player').value;
+
+      // Ricarico lo stato più recente prima di scrivere, per non perdere multe registrate
+      // nel frattempo da un'altra scheda del Senato.
+      await refreshState();
+
+      const ft = fineTypeById(chosenTypeId);
+      const player = playerById(chosenPlayerId);
+      if(!ft || !player){
+        alert('Il tipo di multa o il giocatore selezionato non esiste più (forse rimosso da un\'altra scheda). Ricontrolla e riprova.');
+        render();
+        return;
+      }
+      const qty = ft.unit==='fisso' ? 1 : Math.max(1, parseInt(chosenQtyRaw||'1',10));
+      const base = ft.amount*qty;
       const record = {
         id: uid(),
         protocollo: STATE.nextProtocollo,
-        playerId, fineTypeId: ft.id, qty, total, note,
+        playerId: chosenPlayerId, fineTypeId: ft.id, qty, base, note,
         date: new Date().toISOString()
       };
       STATE.records.unshift(record);
@@ -509,13 +597,14 @@
   }
 
   function showStampToast(record, ft){
+    const amt = recordAmounts(record);
     const wrap = document.createElement('div');
     wrap.className = 'toast-wrap';
     wrap.innerHTML = `
       <div class="toast-card">
         <div class="seal">${sealSvg(90)}</div>
         <h3 class="display">Verbale N° ${String(record.protocollo).padStart(4,'0')} registrato</h3>
-        <p>${escapeHtml(playerById(record.playerId).name)} — ${escapeHtml(ft.label)} — <strong>${euro(record.total)}</strong></p>
+        <p>${escapeHtml(playerById(record.playerId).name)} — ${escapeHtml(ft.label)} — <strong>${euro(amt.total)}</strong>${amt.doubled? ' <span class="match-tag" style="margin-left:4px;">Senato ×2</span>' : ''}</p>
         <button id="toast-ok" class="gold">Ho capito</button>
       </div>`;
     document.body.appendChild(wrap);
@@ -533,13 +622,14 @@
     const rows = records.map(r=>{
       const p = playerById(r.playerId);
       const ft = fineTypeById(r.fineTypeId);
+      const amt = recordAmounts(r);
       return `<tr>
         <td class="protocollo mono" data-label="N°">N° ${String(r.protocollo).padStart(4,'0')}</td>
         <td data-label="Giocatore">${p? escapeHtml(p.name): '<em>rimosso</em>'}</td>
-        <td data-label="Multa">${ft? escapeHtml(ft.label): '<em>eliminata</em>'}${ft&&ft.matchOnly?'<span class="match-tag">partita</span>':''}${r.qty>1?` ×${r.qty}`:''}</td>
+        <td data-label="Multa">${ft? escapeHtml(ft.label): '<em>eliminata</em>'}${ft&&ft.matchOnly?'<span class="match-tag">partita</span>':''}${r.qty>1?` ×${r.qty}`:''}${amt.doubled?'<span class="match-tag">senato ×2</span>':''}</td>
         <td class="note-cell" data-label="Nota">${r.note? escapeHtml(r.note) : '—'}</td>
         <td data-label="Data">${new Date(r.date).toLocaleDateString('it-IT')}</td>
-        <td class="num amt red" data-label="Importo">${euro(r.total)}</td>
+        <td class="num amt red" data-label="Importo">${euro(amt.total)}</td>
         ${isAdmin? `<td data-label="" style="text-align:right;"><button class="small secondary" data-edit-amount="${r.id}">Importo</button> <button class="small secondary" data-del="${r.id}">Elimina</button></td>` : ''}
       </tr>`;
     }).join('');
@@ -574,13 +664,16 @@
     if(ROLE==='senato'){
       document.querySelectorAll('[data-edit-amount]').forEach(btn=>{
         btn.onclick = async ()=>{
-          const record = STATE.records.find(r=>r.id===btn.dataset.editAmount);
-          if(!record) return;
-          const value = prompt('Nuovo importo:', record.total.toFixed(2).replace('.',','));
+          const targetId = btn.dataset.editAmount;
+          const current = recordAmounts(STATE.records.find(r=>r.id===targetId) || {});
+          const value = prompt('Nuovo importo (fisso: da questo momento non seguirà più il raddoppio Senato automatico):', current.total.toFixed(2).replace('.',','));
           if(value===null) return;
           const amount = parseFloat(value.replace(',', '.'));
           if(!Number.isFinite(amount) || amount<0) return;
-          record.total = amount;
+          await refreshState();
+          const record = STATE.records.find(r=>r.id===targetId);
+          if(!record){ alert('Questo verbale non esiste più (forse eliminato da un\'altra scheda).'); render(); return; }
+          record.manualTotal = amount;
           await saveState();
           render();
         };
@@ -588,7 +681,9 @@
       document.querySelectorAll('[data-del]').forEach(btn=>{
         btn.onclick = async ()=>{
           if(!confirm('Eliminare questo verbale?')) return;
-          STATE.records = STATE.records.filter(r=>r.id!==btn.dataset.del);
+          const targetId = btn.dataset.del;
+          await refreshState();
+          STATE.records = STATE.records.filter(r=>r.id!==targetId);
           await saveState();
           render();
         };
@@ -605,7 +700,7 @@
       <div class="rank-row ${i<3 && t.total>0 ?'top':''}">
         <div class="rank-num display">${i+1}</div>
         <div class="rank-body">
-          <div class="rank-name-line"><span class="rname">${escapeHtml(t.p.name)}</span><span class="rtotal">${euro(t.total)}</span></div>
+          <div class="rank-name-line"><span class="rname">${escapeHtml(t.p.name)}${t.p.senato?' <span class="senato-tag">×2</span>':''}</span><span class="rtotal">${euro(t.total)}</span></div>
           <div class="bar-track"><div class="bar-fill" style="width:${max>0? (t.total/max*100):0}%"></div></div>
         </div>
       </div>`).join('');
@@ -622,14 +717,51 @@
   }
   function bindClassifica(){}
 
+  // Etichetta leggibile per il tipo di multa (usata sia in select che come testo)
+  function kindOptionsHtml(selectedUnit){
+    const opts = [
+      {v:'fisso', l:'Multa normale (importo fisso)'},
+      {v:'minuti', l:'Multa con quantità — minuti'},
+      {v:'oggetti', l:'Multa con quantità — oggetti'},
+    ];
+    return opts.map(o=>`<option value="${o.v}" ${selectedUnit===o.v?'selected':''}>${o.l}</option>`).join('');
+  }
+
+  function amountUnitText(unit){
+    if(unit==='minuti') return '€ per minuto';
+    if(unit==='oggetti') return '€ per oggetto';
+    return '€ importo fisso';
+  }
+
   function renderImpostazioni(){
-    const catalogRows = STATE.fineTypes.map(f=>`
-      <div class="fine-catalog-row">
-        <span>${escapeHtml(f.label)} ${f.matchOnly?'<span class="match-tag">partita</span>':''}</span>
-        <span style="display:flex;align-items:center;gap:6px;">
+    const catalogRows = STATE.fineTypes.map((f,idx)=>`
+      <div class="fine-catalog-row" data-catalog-row="${f.id}">
+        <div class="reorder-btns">
+          <button type="button" class="small secondary" data-catalog-up="${f.id}" ${idx===0?'disabled':''} title="Sposta su">▲</button>
+          <button type="button" class="small secondary" data-catalog-down="${f.id}" ${idx===STATE.fineTypes.length-1?'disabled':''} title="Sposta giù">▼</button>
+        </div>
+        <div class="field f-label">
+          <label>Descrizione</label>
+          <input type="text" data-catalog-label="${f.id}" value="${escapeHtml(f.label)}">
+        </div>
+        <div class="field f-kind">
+          <label>Tipo di multa</label>
+          <select data-catalog-kind="${f.id}">${kindOptionsHtml(f.unit)}</select>
+        </div>
+        <div class="field f-amount">
+          <label>Importo</label>
           <input type="number" min="0" step="0.5" value="${f.amount}" data-catalog-amount="${f.id}" class="mono">
-          <span class="mono" style="font-size:0.75rem;color:var(--ink-faint);">${f.unit==='fisso'?'€':f.unit==='minuti'?'€/min':'€/ogg.'}</span>
-        </span>
+          <span class="amount-unit mono" data-catalog-amount-unit="${f.id}">${amountUnitText(f.unit)}</span>
+        </div>
+        <div class="field f-qtylabel" data-catalog-qtylabel-wrap="${f.id}" style="${f.unit==='fisso'?'display:none;':''}">
+          <label>Etichetta quantità</label>
+          <input type="text" data-catalog-qtylabel="${f.id}" value="${escapeHtml(f.qtyLabel||'')}" placeholder="Es. Minuti di ritardo">
+        </div>
+        <div class="checkbox-field">
+          <input type="checkbox" id="catalog-match-${f.id}" data-catalog-match="${f.id}" ${f.matchOnly?'checked':''}>
+          <label for="catalog-match-${f.id}">Solo alla partita</label>
+        </div>
+        <button class="small danger" data-catalog-remove="${f.id}">Rimuovi</button>
       </div>`).join('');
 
     return `
@@ -651,8 +783,37 @@
       </div>
       <div class="settings-block">
         <h3>Tariffario multe</h3>
-        ${catalogRows}
+        <p class="subtext">Modifica descrizione, tipo, importo e note di ogni multa, oppure rimuovila. Usa le frecce ▲▼ per riordinarle: l'ordine impostato qui è lo stesso che verrà mostrato nella scheda "Registra Multa". Una multa "normale" ha un importo fisso; una multa "con quantità" moltiplica l'importo per i minuti o gli oggetti inseriti al momento della registrazione.</p>
+        ${catalogRows || '<div class="empty-state">Nessun tipo di multa nel tariffario.</div>'}
         <button id="btn-save-catalog" class="secondary" style="margin-top:14px;">Salva tariffario</button>
+
+        <div class="new-fine-form" style="margin-top:22px;padding-top:18px;border-top:1px dashed var(--line);">
+          <h3 style="margin-top:0;">Aggiungi tipo di multa</h3>
+          <div class="fine-catalog-row" style="border-top:none;padding-top:0;">
+            <div class="field f-label">
+              <label>Descrizione</label>
+              <input type="text" id="new-fine-label" placeholder="Es. Dimenticanza borraccia">
+            </div>
+            <div class="field f-kind">
+              <label>Tipo di multa</label>
+              <select id="new-fine-kind">${kindOptionsHtml('fisso')}</select>
+            </div>
+            <div class="field f-amount">
+              <label>Importo</label>
+              <input type="number" id="new-fine-amount" min="0" step="0.5" value="1" class="mono">
+              <span class="amount-unit mono" id="new-fine-amount-unit">${amountUnitText('fisso')}</span>
+            </div>
+            <div class="field f-qtylabel" id="new-fine-qtylabel-wrap" style="display:none;">
+              <label>Etichetta quantità</label>
+              <input type="text" id="new-fine-qtylabel" placeholder="Es. Minuti di ritardo">
+            </div>
+            <div class="checkbox-field">
+              <input type="checkbox" id="new-fine-match">
+              <label for="new-fine-match">Solo alla partita</label>
+            </div>
+            <button id="btn-add-fine" class="gold">Aggiungi tipo</button>
+          </div>
+        </div>
       </div>
       <div class="settings-block">
         <h3>Backup / Ripristino</h3>
@@ -673,6 +834,7 @@
     document.getElementById('btn-save-teamname').onclick = async ()=>{
       const v = document.getElementById('set-teamname').value.trim();
       if(!v) return;
+      await refreshState();
       STATE.teamName = v;
       await saveState();
       render();
@@ -680,24 +842,125 @@
     document.getElementById('btn-save-pin').onclick = async ()=>{
       const v = document.getElementById('set-pin').value.trim();
       if(!v) return;
+      await refreshState();
       STATE.pin = v;
       await saveState();
       alert('PIN aggiornato.');
       render();
     };
+    // Cambiando il tipo (fisso/minuti/oggetti) di una riga esistente, mostra/nasconde
+    // il campo "etichetta quantità" e aggiorna il suffisso accanto all'importo.
+    document.querySelectorAll('[data-catalog-kind]').forEach(sel=>{
+      sel.onchange = ()=>{
+        const id = sel.dataset.catalogKind;
+        const wrap = document.querySelector(`[data-catalog-qtylabel-wrap="${id}"]`);
+        const unitSpan = document.querySelector(`[data-catalog-amount-unit="${id}"]`);
+        if(wrap) wrap.style.display = sel.value==='fisso' ? 'none' : '';
+        if(unitSpan) unitSpan.textContent = amountUnitText(sel.value);
+      };
+    });
+
     document.getElementById('btn-save-catalog').onclick = async ()=>{
-      document.querySelectorAll('[data-catalog-amount]').forEach(inp=>{
-        const ft = fineTypeById(inp.dataset.catalogAmount);
-        const val = parseFloat(inp.value);
-        if(!isNaN(val) && val>=0) ft.amount = val;
+      const updates = [];
+      let invalid = false;
+      document.querySelectorAll('[data-catalog-row]').forEach(row=>{
+        const id = row.dataset.catalogRow;
+        const label = row.querySelector('[data-catalog-label]').value.trim();
+        const kind = row.querySelector('[data-catalog-kind]').value;
+        const amount = parseFloat(row.querySelector('[data-catalog-amount]').value);
+        const qtyLabel = row.querySelector('[data-catalog-qtylabel]').value.trim();
+        const matchOnly = row.querySelector('[data-catalog-match]').checked;
+        if(!label || isNaN(amount) || amount<0){ invalid = true; return; }
+        updates.push({ id, label, unit: kind, amount, qtyLabel, matchOnly });
+      });
+      if(invalid){ alert('Controlla descrizione e importo di ogni multa: non possono essere vuoti o negativi.'); return; }
+      await refreshState();
+      updates.forEach(u=>{
+        const ft = fineTypeById(u.id);
+        if(!ft) return;
+        ft.label = u.label;
+        ft.unit = u.unit;
+        ft.amount = u.amount;
+        ft.matchOnly = u.matchOnly;
+        if(u.unit==='fisso') delete ft.qtyLabel;
+        else ft.qtyLabel = u.qtyLabel || (u.unit==='minuti' ? 'Minuti' : 'Numero di oggetti');
       });
       await saveState();
       alert('Tariffario aggiornato.');
       render();
     };
+
+    // Riordino dei tipi di multa: sposta l'elemento su o giù nell'elenco.
+    // L'ordine di STATE.fineTypes è lo stesso usato per generare le liste nella
+    // scheda "Registra Multa" (sia per le multe generali che per quelle di partita).
+    document.querySelectorAll('[data-catalog-up]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const id = btn.dataset.catalogUp;
+        await refreshState();
+        const idx = STATE.fineTypes.findIndex(f=>f.id===id);
+        if(idx>0){
+          const tmp = STATE.fineTypes[idx-1];
+          STATE.fineTypes[idx-1] = STATE.fineTypes[idx];
+          STATE.fineTypes[idx] = tmp;
+          await saveState();
+        }
+        render();
+      };
+    });
+    document.querySelectorAll('[data-catalog-down]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const id = btn.dataset.catalogDown;
+        await refreshState();
+        const idx = STATE.fineTypes.findIndex(f=>f.id===id);
+        if(idx>=0 && idx<STATE.fineTypes.length-1){
+          const tmp = STATE.fineTypes[idx+1];
+          STATE.fineTypes[idx+1] = STATE.fineTypes[idx];
+          STATE.fineTypes[idx] = tmp;
+          await saveState();
+        }
+        render();
+      };
+    });
+
+    document.querySelectorAll('[data-catalog-remove]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const id = btn.dataset.catalogRemove;
+        const ft = fineTypeById(id);
+        if(!ft) return;
+        if(!confirm(`Rimuovere "${ft.label}" dal tariffario? Le multe già registrate con questo tipo resteranno nello storico.`)) return;
+        await refreshState();
+        STATE.fineTypes = STATE.fineTypes.filter(f=>f.id!==id);
+        await saveState();
+        render();
+      };
+    });
+
+    // Aggiunta di un nuovo tipo di multa
+    const newKindSel = document.getElementById('new-fine-kind');
+    const newQtyWrap = document.getElementById('new-fine-qtylabel-wrap');
+    const newAmountUnit = document.getElementById('new-fine-amount-unit');
+    newKindSel.onchange = ()=>{
+      newQtyWrap.style.display = newKindSel.value==='fisso' ? 'none' : '';
+      newAmountUnit.textContent = amountUnitText(newKindSel.value);
+    };
+    document.getElementById('btn-add-fine').onclick = async ()=>{
+      const label = document.getElementById('new-fine-label').value.trim();
+      const kind = newKindSel.value;
+      const amount = parseFloat(document.getElementById('new-fine-amount').value);
+      const qtyLabel = document.getElementById('new-fine-qtylabel').value.trim();
+      const matchOnly = document.getElementById('new-fine-match').checked;
+      if(!label){ alert('Inserisci una descrizione per la multa.'); return; }
+      if(isNaN(amount) || amount<0){ alert('Inserisci un importo valido.'); return; }
+      const newType = { id: uid(), label, unit: kind, amount, matchOnly };
+      if(kind!=='fisso') newType.qtyLabel = qtyLabel || (kind==='minuti' ? 'Minuti' : 'Numero di oggetti');
+      await refreshState();
+      STATE.fineTypes.push(newType);
+      await saveState();
+      render();
+    };
     document.getElementById('btn-export').onclick = ()=>{
       const blob = new Blob([JSON.stringify(STATE,null,2)], {type:'application/json'});
-      const url = URL.URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = 'backup-multe.json';
       a.click();
