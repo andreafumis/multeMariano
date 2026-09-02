@@ -495,7 +495,7 @@
           if(newNumber===null) return;
           await refreshState();
           const target = playerById(id);
-          if(!target){ alert("Questo giocatore non esiste più (forse rimosso da un'altra scheda)."); render(); return; }
+          if(!target){ alert('Questo giocatore non esiste più (forse rimosso da un\'altra scheda).'); render(); return; }
           target.name = trimmedName;
           target.number = newNumber.trim();
           await saveState();
@@ -703,7 +703,7 @@
           if(!Number.isFinite(amount) || amount<0) return;
           await refreshState();
           const record = STATE.records.find(r=>r.id===targetId);
-          if(!record){ alert("Questo verbale non esiste più (forse eliminato da un'altra scheda)."); render(); return; }
+          if(!record){ alert('Questo verbale non esiste più (forse eliminato da un\'altra scheda).'); render(); return; }
           record.manualTotal = amount;
           await saveState();
           render();
