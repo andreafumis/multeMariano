@@ -97,21 +97,23 @@
   .panel h2{font-size:1.15rem;margin:0 0 4px;}
   .panel .panel-desc{color:var(--ink-soft);font-size:0.84rem;margin:0 0 20px;}
 
-  .player-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);}
+  .player-row{padding:12px 0;border-top:1px solid var(--line);}
   .player-row:first-of-type{border-top:none;}
+  .player-main{display:flex;align-items:center;gap:12px;}
   .avatar{width:38px;height:38px;border-radius:50%;background:var(--ink);color:var(--paper-card);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;flex:none;font-family:'Montserrat',sans-serif;}
   .player-info{flex:1;min-width:0;}
   .player-info .pname{font-weight:600;font-size:0.94rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
   .player-info .pnum{color:var(--ink-faint);font-size:0.76rem;font-family:'JetBrains Mono',monospace;}
   .senato-tag{display:inline-block;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.04em;background:var(--red-bg);color:var(--red);padding:2px 6px;border-radius:3px;font-weight:700;border:1px solid var(--red-soft);}
-  .player-total{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.95rem;}
+  .player-total{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.95rem;flex:none;}
+  .player-admin-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding-left:50px;}
+  .senato-toggle{display:flex;align-items:center;gap:6px;flex:none;font-size:0.72rem;color:var(--ink-soft);white-space:nowrap;}
+  .senato-toggle input[type=checkbox]{accent-color:var(--red);width:15px;height:15px;}
   .add-player-form{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:flex-end;padding-bottom:18px;border-bottom:1px dashed var(--line);}
   .add-player-form .field{margin-bottom:0;flex:1;min-width:120px;}
   .checkbox-field{display:flex;align-items:center;gap:8px;margin-bottom:0;}
   .checkbox-field input[type=checkbox]{width:auto;flex:none;accent-color:var(--red);width:16px;height:16px;}
   .checkbox-field label{margin:0;text-transform:none;font-size:0.82rem;letter-spacing:normal;color:var(--ink);white-space:nowrap;}
-  .senato-toggle{display:flex;align-items:center;gap:6px;flex:none;font-size:0.72rem;color:var(--ink-soft);}
-  .senato-toggle input[type=checkbox]{accent-color:var(--red);width:15px;height:15px;}
   .empty-state{text-align:center;padding:36px 10px;color:var(--ink-faint);font-style:italic;font-size:0.9rem;}
 
   .fine-preview{background:var(--paper);border:1px dashed var(--gold);border-radius:5px;padding:14px 16px;margin:6px 0 20px;display:flex;justify-content:space-between;align-items:center;}
@@ -183,6 +185,10 @@
     tbody td{display:flex;justify-content:space-between;border:none;padding:4px 2px;}
     tbody td.note-cell{display:block;max-width:none;}
     tbody td::before{content:attr(data-label);font-weight:700;color:var(--ink-faint);font-size:0.7rem;text-transform:uppercase;margin-right:10px;}
+    .player-main{flex-wrap:wrap;}
+    .player-total{margin-left:50px;}
+    .player-admin-controls{padding-left:0;margin-left:0;}
+    .fine-catalog-row .reorder-btns{order:-1;}
   }
 
 </style>
@@ -416,14 +422,19 @@
     const rows = STATE.players.map(p=>{
       const tot = playerTotal(p.id);
       return `<div class="player-row">
-        <div class="avatar">${escapeHtml(initials(p.name))}</div>
-        <div class="player-info">
-          <div class="pname">${escapeHtml(p.name)} ${p.senato? '<span class="senato-tag">Senato ×2</span>' : ''}</div>
-          <div class="pnum">${p.number? '#'+escapeHtml(p.number) : 'nessun numero'}</div>
+        <div class="player-main">
+          <div class="avatar">${escapeHtml(initials(p.name))}</div>
+          <div class="player-info">
+            <div class="pname">${escapeHtml(p.name)} ${p.senato? '<span class="senato-tag">Senato ×2</span>' : ''}</div>
+            <div class="pnum">${p.number? '#'+escapeHtml(p.number) : 'nessun numero'}</div>
+          </div>
+          <div class="player-total">${euro(tot)}</div>
         </div>
-        ${isAdmin ? `<label class="senato-toggle"><input type="checkbox" data-senato-toggle="${p.id}" ${p.senato?'checked':''}> Senato</label>` : ''}
-        <div class="player-total">${euro(tot)}</div>
-        ${isAdmin ? `<button class="small danger" data-remove="${p.id}" style="margin-left:8px;">Rimuovi</button>` : ''}
+        ${isAdmin ? `<div class="player-admin-controls">
+          <label class="senato-toggle"><input type="checkbox" data-senato-toggle="${p.id}" ${p.senato?'checked':''}> Senato</label>
+          <button class="small secondary" data-edit-player="${p.id}">Modifica</button>
+          <button class="small danger" data-remove="${p.id}">Rimuovi</button>
+        </div>` : ''}
       </div>`;
     }).join('');
 
@@ -467,6 +478,26 @@
           if(!p || !confirm(`Rimuovere ${p.name}?`)) return;
           await refreshState();
           STATE.players = STATE.players.filter(pl=>pl.id!==id);
+          await saveState();
+          render();
+        };
+      });
+      document.querySelectorAll('[data-edit-player]').forEach(btn=>{
+        btn.onclick = async ()=>{
+          const id = btn.dataset.editPlayer;
+          const p = playerById(id);
+          if(!p) return;
+          const newName = prompt('Nome e cognome:', p.name);
+          if(newName===null) return;
+          const trimmedName = newName.trim();
+          if(!trimmedName){ alert('Il nome non può essere vuoto.'); return; }
+          const newNumber = prompt('Numero di maglia (lascia vuoto per nessun numero):', p.number || '');
+          if(newNumber===null) return;
+          await refreshState();
+          const target = playerById(id);
+          if(!target){ alert('Questo giocatore non esiste più (forse rimosso da un\\'altra scheda).'); render(); return; }
+          target.name = trimmedName;
+          target.number = newNumber.trim();
           await saveState();
           render();
         };
@@ -577,7 +608,7 @@
       const ft = fineTypeById(chosenTypeId);
       const player = playerById(chosenPlayerId);
       if(!ft || !player){
-        alert('Il tipo di multa o il giocatore selezionato non esiste più (forse rimosso da un\'altra scheda). Ricontrolla e riprova.');
+        alert('Il tipo di multa o il giocatore selezionato non esiste più (forse rimosso da un\\'altra scheda). Ricontrolla e riprova.');
         render();
         return;
       }
@@ -672,7 +703,7 @@
           if(!Number.isFinite(amount) || amount<0) return;
           await refreshState();
           const record = STATE.records.find(r=>r.id===targetId);
-          if(!record){ alert('Questo verbale non esiste più (forse eliminato da un\'altra scheda).'); render(); return; }
+          if(!record){ alert('Questo verbale non esiste più (forse eliminato da un\\'altra scheda).'); render(); return; }
           record.manualTotal = amount;
           await saveState();
           render();
