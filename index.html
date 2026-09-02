@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Registro Multe di Squadra</title>
+<link rel="icon" type="image/jpeg" href="icon.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="icon" type="image/jpeg" href="icon.jpg">
 <!-- Supabase Client JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -46,10 +46,15 @@
   .mono{font-family:'JetBrains Mono',monospace;}
   #app{max-width:920px;margin:0 auto;padding:20px 18px 60px;}
 
-  .login-screen{min-height:80vh;display:flex;align-items:center;justify-content:center;}
+  .login-screen{min-height:80vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+  .login-screen::before{
+    content:'';position:absolute;inset:0;
+    background-image:url('icon.jpg');background-repeat:no-repeat;background-position:center;background-size:min(60vmin,480px);
+    opacity:0.07;pointer-events:none;z-index:0;
+  }
   .login-card{
     background:var(--paper-card);border:1px solid var(--line);box-shadow:var(--shadow);
-    border-radius:6px;padding:40px 36px;max-width:420px;width:100%;text-align:center;position:relative;
+    border-radius:6px;padding:40px 36px;max-width:420px;width:100%;text-align:center;position:relative;z-index:1;
   }
   .login-card .seal{width:76px;height:76px;margin:0 auto 14px;}
   .login-card h1{font-size:1.6rem;margin:0 0 4px;letter-spacing:0.01em;}
@@ -295,13 +300,17 @@
   // ovunque venga mostrato il totale, in tempo reale su tutte le schede collegate.
   function recordAmounts(r){
     if(r.manualTotal !== undefined && r.manualTotal !== null){
-      return { base:r.manualTotal, total:r.manualTotal, doubled:false, manual:true };
+      return { base:r.manualTotal, total:r.manualTotal, doubled:false, matchdayDouble:false, manual:true };
     }
     // Compatibilita' con verbali salvati prima di questa modifica (avevano solo total+doubled fissi)
     const base = (r.base !== undefined) ? r.base : (r.doubled ? r.total/2 : r.total);
     const p = playerById(r.playerId);
     const doubled = !!(p && p.senato);
-    return { base, total: doubled ? base*2 : base, doubled, manual:false };
+    const matchdayDouble = !!r.matchdayDouble;
+    let total = base;
+    if(matchdayDouble) total *= 2;
+    if(doubled) total *= 2;
+    return { base, total, doubled, matchdayDouble, manual:false };
   }
 
   function playerTotal(playerId){
@@ -544,8 +553,12 @@
         <label id="f-qty-label">Quantità</label>
         <input type="number" id="f-qty" min="1" step="1" value="1">
       </div>
+      <div class="checkbox-field" style="margin-bottom:14px;">
+        <input type="checkbox" id="f-matchday-double">
+        <label for="f-matchday-double">Raddoppia giorno partita</label>
+      </div>
       <div class="fine-preview">
-        <span class="flabel">Totale multa<span class="fdoubled" id="f-doubled-note" style="display:none;">Raddoppiata: membro del Senato</span></span>
+        <span class="flabel">Totale multa<span class="fdoubled" id="f-doubled-note" style="display:none;">Raddoppiata: membro del Senato</span><span class="fdoubled" id="f-matchday-note" style="display:none;">Raddoppiata: giorno partita</span></span>
         <span class="ftotal mono" id="f-total">€ 0,00</span>
       </div>
       <div class="field">
@@ -572,6 +585,8 @@
     const qtyInput = document.getElementById('f-qty');
     const totalEl = document.getElementById('f-total');
     const doubledNote = document.getElementById('f-doubled-note');
+    const matchdayNote = document.getElementById('f-matchday-note');
+    const matchdayCheckbox = document.getElementById('f-matchday-double');
 
     function updatePreview(){
       const ft = fineTypeById(typeSel.value);
@@ -586,20 +601,24 @@
       }
       const qty = Math.max(1, parseInt(qtyInput.value||'1',10));
       const player = playerById(playerSel.value);
-      const base = ft.amount*qty;
-      const total = (player && player.senato) ? base*2 : base;
+      let total = ft.amount*qty;
+      if(matchdayCheckbox.checked) total *= 2;
+      if(player && player.senato) total *= 2;
       totalEl.textContent = euro(total);
       doubledNote.style.display = (player && player.senato) ? '' : 'none';
+      matchdayNote.style.display = matchdayCheckbox.checked ? '' : 'none';
     }
     typeSel.onchange = updatePreview;
     qtyInput.oninput = updatePreview;
     playerSel.onchange = updatePreview;
+    matchdayCheckbox.onchange = updatePreview;
     updatePreview();
 
     document.getElementById('btn-submit-fine').onclick = async ()=>{
       const chosenTypeId = typeSel.value;
       const chosenPlayerId = playerSel.value;
       const chosenQtyRaw = qtyInput.value;
+      const chosenMatchdayDouble = matchdayCheckbox.checked;
       const note = document.getElementById('f-note').value.trim();
 
       // Ricarico lo stato più recente prima di scrivere, per non perdere multe registrate
@@ -619,6 +638,7 @@
         id: uid(),
         protocollo: STATE.nextProtocollo,
         playerId: chosenPlayerId, fineTypeId: ft.id, qty, base, note,
+        matchdayDouble: chosenMatchdayDouble,
         date: new Date().toISOString()
       };
       STATE.records.unshift(record);
@@ -636,7 +656,7 @@
       <div class="toast-card">
         <div class="seal">${sealSvg(90)}</div>
         <h3 class="display">Verbale N° ${String(record.protocollo).padStart(4,'0')} registrato</h3>
-        <p>${escapeHtml(playerById(record.playerId).name)} — ${escapeHtml(ft.label)} — <strong>${euro(amt.total)}</strong>${amt.doubled? ' <span class="match-tag" style="margin-left:4px;">Senato ×2</span>' : ''}</p>
+        <p>${escapeHtml(playerById(record.playerId).name)} — ${escapeHtml(ft.label)} — <strong>${euro(amt.total)}</strong>${amt.matchdayDouble? ' <span class="match-tag" style="margin-left:4px;">Partita ×2</span>' : ''}${amt.doubled? ' <span class="match-tag" style="margin-left:4px;">Senato ×2</span>' : ''}</p>
         <button id="toast-ok" class="gold">Ho capito</button>
       </div>`;
     document.body.appendChild(wrap);
@@ -658,7 +678,7 @@
       return `<tr>
         <td class="protocollo mono" data-label="N°">N° ${String(r.protocollo).padStart(4,'0')}</td>
         <td data-label="Giocatore">${p? escapeHtml(p.name): '<em>rimosso</em>'}</td>
-        <td data-label="Multa">${ft? escapeHtml(ft.label): '<em>eliminata</em>'}${ft&&ft.matchOnly?'<span class="match-tag">partita</span>':''}${r.qty>1?` ×${r.qty}`:''}${amt.doubled?'<span class="match-tag">senato ×2</span>':''}</td>
+        <td data-label="Multa">${ft? escapeHtml(ft.label): '<em>eliminata</em>'}${ft&&ft.matchOnly?'<span class="match-tag">partita</span>':''}${r.qty>1?` ×${r.qty}`:''}${amt.matchdayDouble?'<span class="match-tag">partita ×2</span>':''}${amt.doubled?'<span class="match-tag">senato ×2</span>':''}</td>
         <td class="note-cell" data-label="Nota">${r.note? escapeHtml(r.note) : '—'}</td>
         <td data-label="Data">${new Date(r.date).toLocaleDateString('it-IT')}</td>
         <td class="num amt red" data-label="Importo">${euro(amt.total)}</td>
@@ -1018,7 +1038,37 @@
 
   function escapeHtml(str){ return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+  // Genera una favicon rotonda a partire dal logo quadrato icon.jpg, ritagliandolo
+  // su un canvas circolare e sostituendo dinamicamente il <link rel="icon">.
+  function setRoundFavicon(){
+    const img = new Image();
+    img.onload = ()=>{
+      const size = 64;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(size/2, size/2, size/2, 0, Math.PI*2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(img, 0, 0, size, size);
+      ctx.restore();
+      let link = document.querySelector("link[rel~='icon']");
+      if(!link){
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.type = 'image/png';
+      link.href = canvas.toDataURL('image/png');
+    };
+    img.onerror = ()=>{ console.warn('icon.jpg non trovato: impossibile generare la favicon rotonda.'); };
+    img.src = 'icon.jpg';
+  }
+
   (async function boot(){
+    setRoundFavicon();
     STATE = await loadState();
     subscribeRealtime();
     render();
